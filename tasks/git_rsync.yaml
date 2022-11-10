@@ -1,0 +1,15 @@
+- name: Copy sources
+  synchronize:
+    src: "{{kernel_src_source}}"
+    dest: "{{kernel_src_destination}}"
+    delete: true
+    recursive: yes
+    archive: no
+    checksum: yes
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=.config"
+      - "--exclude=*.pb.go"
+      - "--exclude=*.o"
+      - "--exclude=*.d"
+      - "--filter=:- .gitignore"

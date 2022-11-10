@@ -1,0 +1,54 @@
+---
+- name: Install all required dev packages
+  become: true
+  apt:
+    update_cache: true
+    pkg:
+      - build-essential
+      - libncurses-dev 
+      - gawk 
+      - flex
+      - dwarves
+      - zstd
+      - bison
+      - openssl
+      - libssl-dev
+      - dkms
+      - libelf-dev
+      - libudev-dev 
+      - libpci-dev
+      - libiberty-dev
+      - autoconf
+- include_tasks: git_rsync.yaml
+  when: 'kernel_fetch_method == "git_rsync"'
+- name: Copy config
+  synchronize:
+    dest: "{{kernel_src_destination}}/.config"
+    src: "{{kernel_config}}"
+  when: kernel_config | length > 0
+- name: check for "{{kernel_src_destination}}/.scmversion"
+  stat:
+    path: "{{kernel_src_destination}}/.scmversion"
+  register: scmversion
+- name: Set version string
+  copy:
+    force: no
+    dest: "{{kernel_src_destination}}/.scmversion"
+    content: "{{kernel_version_string}}"
+  when: (kernel_version_string | length > 0) and (not scmversion.stat.exists)
+- name: Compile kernel
+  command: make -j {{kernel_j}}
+  args:
+    chdir: "{{ kernel_src_destination }}"
+- name: Install kernel modules
+  become: true
+  make:
+    target: modules_install
+    chdir: "{{ kernel_src_destination }}"
+  when: "kernel_install"
+- name: Install kernel
+  become: true
+  make:
+    target: install
+    chdir: "{{ kernel_src_destination }}"
+  when: "kernel_install"

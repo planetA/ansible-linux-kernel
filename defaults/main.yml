@@ -1,0 +1,5 @@
+---
+# defaults file for rdma-core
+kernel_install: false
+kernel_j: 5
+kernel_version_string: ""
